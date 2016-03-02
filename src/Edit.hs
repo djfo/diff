@@ -19,9 +19,9 @@ type CostFunction a = Op a -> Int
 
 editDistance :: Eq a => CostFunction a -> [a] -> [a] -> EditTranscript a
 editDistance _ [] [] = []
-editDistance cost xs ys = e : uncurry (editDistance cost) rec
+editDistance cost xs ys = edit : uncurry (editDistance cost) args
   where
-    (e, rec) : _ = sortOn (cost . fst) (edits xs ys)
+    (edit, args) : _ = sortOn (cost . fst) (edits xs ys)
 
 showET :: [Op a] -> String
 showET = map f

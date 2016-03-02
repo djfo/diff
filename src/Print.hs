@@ -14,7 +14,6 @@ instance ToString String where
   toS = id
 
 printEdit :: ToString a => EditTranscript a -> [a] -> [a] -> IO ()
-printEdit _ [] [] = return ()
 printEdit (op:ops) xs ys =
   case op of
     Insert -> do
@@ -30,3 +29,5 @@ printEdit (op:ops) xs ys =
       putStrLn $ "R | " ++ toS x
       putStrLn $ "  | " ++ toS y
       printEdit ops (tail xs) (tail ys)
+printEdit _ [] [] = return ()
+printEdit _ _ _ = error "invalid arguments"
