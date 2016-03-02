@@ -23,8 +23,14 @@ greedyEditDistance cost xs ys = edit : uncurry (greedyEditDistance cost) args
   where
     (edit, args) : _ = sortOn (cost . fst) (edits xs ys)
 
+-- TODO: compute bottom up, memoize
 editDistance :: Eq a => CostFunction a -> [a] -> [a] -> (Int, EditTranscript a)
-editDistance = undefined
+editDistance cost xs ys =
+  case sortOn fst (map f (edits xs ys)) of
+    []         -> (0, [])
+    (c, t) : _ -> (c, t)
+  where
+    f (op, args) = let (d, t) = uncurry (editDistance cost) args in (cost op + d, op : t)
 
 showET :: [Op a] -> String
 showET = map f
