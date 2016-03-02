@@ -17,11 +17,14 @@ edits (x:xs) (y:ys) = [(Insert, (x:xs, ys)), (Delete, (xs, y:ys)), (subst, (xs, 
 
 type CostFunction a = Op a -> Int
 
-editDistance :: Eq a => CostFunction a -> [a] -> [a] -> EditTranscript a
-editDistance _ [] [] = []
-editDistance cost xs ys = edit : uncurry (editDistance cost) args
+greedyEditDistance :: Eq a => CostFunction a -> [a] -> [a] -> EditTranscript a
+greedyEditDistance _ [] [] = []
+greedyEditDistance cost xs ys = edit : uncurry (greedyEditDistance cost) args
   where
     (edit, args) : _ = sortOn (cost . fst) (edits xs ys)
+
+editDistance :: Eq a => CostFunction a -> [a] -> [a] -> (Int, EditTranscript a)
+editDistance = undefined
 
 showET :: [Op a] -> String
 showET = map f

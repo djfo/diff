@@ -10,7 +10,7 @@ diff path1 path2 =
   do
     lines1 <- lines <$> readFile path1
     lines2 <- lines <$> readFile path2
-    let t = editDistance cost lines1 lines2
+    let t = greedyEditDistance cost lines1 lines2
     printEdit t lines1 lines2
   where
     cost :: Op a -> Int
@@ -23,7 +23,7 @@ diff path1 path2 =
 strDiff :: String -> String -> IO ()
 strDiff s t =
   do
-    let et = editDistance cost s t
+    let et = greedyEditDistance cost s t
     printEdit et s t
   where
     cost :: Op a -> Int
