@@ -5,28 +5,6 @@ import System.Environment
 import Edit
 import Print
 
-data Sym a = Sym a | Gap deriving (Eq, Show)
-
-editTranscript :: Eq a => [Sym a] -> [Sym a] -> EditTranscript a
-editTranscript [] [] = []
-editTranscript (x:xs) (y:ys) = op : editTranscript xs ys
-  where
-    op | x /= Gap && y == Gap = Delete
-       | x == Gap && y /= Gap = Insert
-       | x == y               = Match
-       | Sym x' <- x, Sym y' <- y, x' /= y' = Replace x' y'
-
-showS :: [Sym Char] -> String
-showS []     = []
-showS (x:xs) = f x : showS xs
-  where
-    f (Sym y) = y
-    f Gap     = '_'
-
-toSym :: Char -> Sym Char
-toSym x | x == '_'  = Gap
-        | otherwise = Sym x
-
 diff :: FilePath -> FilePath -> IO ()
 diff path1 path2 =
   do
@@ -42,10 +20,9 @@ diff path1 path2 =
         Match -> 0
         _ -> 1
 
-strDiff :: IO ()
-strDiff =
+strDiff :: String -> String -> IO ()
+strDiff s t =
   do
-    [s, t] <- getArgs
     let et = editDistance cost s t
     printEdit et s t
   where
@@ -56,5 +33,22 @@ strDiff =
         Match -> 0
         _ -> 1
 
+main2 :: (String -> String -> IO ()) -> [String] -> IO ()
+main2 f args =
+  case args of
+    [arg1, arg2] -> f arg1 arg2
+    _ -> putStrLn "two arguments expected, too few given"
+
+select :: String -> [String] -> IO ()
+select cmd =
+  case cmd of
+    "diff" -> main2 diff
+    "str" -> main2 strDiff
+    _ -> const (putStrLn $ "unknown command: " ++ cmd)
+
 main :: IO ()
-main = strDiff
+main = do
+  args <- getArgs
+  case args of
+    cmd : cmdArgs -> select cmd cmdArgs
+    _ -> putStrLn "no command given"
