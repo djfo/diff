@@ -5,12 +5,18 @@ import System.Environment
 import Edit
 import Print
 
-diff :: FilePath -> FilePath -> IO ()
-diff path1 path2 =
+type F a = CostFunction a -> [a] -> [a] -> (Int, EditTranscript a)
+
+dummy :: Eq a => F a
+dummy cost xs ys = (0, greedyEditDistance cost xs ys)
+
+diff :: F String -> FilePath -> FilePath -> IO ()
+diff editDist path1 path2 =
   do
     lines1 <- lines <$> readFile path1
     lines2 <- lines <$> readFile path2
-    let t = greedyEditDistance cost lines1 lines2
+    let (c, t) = editDist cost lines1 lines2
+    putStrLn $ "cost: " ++ show c
     printEdit t lines1 lines2
   where
     cost :: Op a -> Int
@@ -20,10 +26,11 @@ diff path1 path2 =
         Match -> 0
         _ -> 1
 
-strDiff :: String -> String -> IO ()
-strDiff s t =
+strDiff :: F Char -> String -> String -> IO ()
+strDiff editDist s t =
   do
-    let et = greedyEditDistance cost s t
+    let (c, et) = editDist cost s t
+    putStrLn $ "cost: " ++ show c
     printEdit et s t
   where
     cost :: Op a -> Int
@@ -42,8 +49,9 @@ main2 f args =
 select :: String -> [String] -> IO ()
 select cmd =
   case cmd of
-    "diff" -> main2 diff
-    "str" -> main2 strDiff
+    "diff" -> main2 (diff editDistance)
+    "str" -> main2 (strDiff editDistance)
+    "greedy" -> main2 (diff dummy)
     _ -> const (putStrLn $ "unknown command: " ++ cmd)
 
 main :: IO ()
