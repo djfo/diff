@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+
 module Main where
 
 import Data.List (sortOn)
@@ -58,13 +60,46 @@ editDistance xs ys = e : uncurry editDistance rec
   where
     (e, rec) : _ = sortOn (cost . fst) (edits xs ys)
 
-diff :: FilePath -> FilePath -> IO ()
-diff path1 path2 = do
+class ToString a where
+  toS :: a -> String
+
+instance ToString Char where
+  toS = (: [])
+
+instance ToString String where
+  toS = id
+
+printEdit :: ToString a => EditTranscript a -> [a] -> [a] -> IO ()
+printEdit _ [] [] = return ()
+printEdit (op:ops) xs ys =
+  case op of
+    Insert -> do
+      putStrLn $ "+ | " ++ toS (head ys)
+      printEdit ops xs (tail ys)
+    Delete -> do
+      putStrLn $ "- | " ++ toS (head xs)
+      printEdit ops (tail xs) ys
+    Match -> do
+      putStrLn $ "= | " ++ toS (head xs)
+      printEdit ops (tail xs) (tail ys)
+    Replace x y -> do
+      putStrLn $ "R | " ++ toS x
+      putStrLn $ "  | " ++ toS y
+      printEdit ops (tail xs) (tail ys)
+
+diff :: IO ()
+diff = do
+  [path1, path2] <- getArgs
   lines1 <- lines <$> readFile path1
   lines2 <- lines <$> readFile path2
-  putStrLn $ showET (editDistance lines1 lines2)
+  let t = editDistance lines1 lines2
+  printEdit t lines1 lines2
+
+strDiff :: IO ()
+strDiff = do
+  [s, t] <- getArgs
+  let et = editDistance s t
+  printEdit et s t
 
 main :: IO ()
-main = do
-  [s, t] <- getArgs
-  putStrLn $ showET (editDistance s t)
+main = strDiff
