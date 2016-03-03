@@ -17,7 +17,7 @@ cabal-version:       >=1.10
 
 executable diff
   main-is:             diff.hs
-  ghc-options:         -Wall
+  ghc-options:         -O2 -Wall
   -- other-modules:       
   other-extensions:    TypeSynonymInstances, FlexibleInstances
   build-depends:       base >=4.8 && <4.9
