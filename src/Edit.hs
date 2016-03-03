@@ -4,54 +4,37 @@ module Edit (
   , showET
   , CostFunction
   , editDistance
-  , greedyEditDistance
   ) where
 
-import Data.Array (listArray, (!), range)
-import Data.List (sortOn)
+import Control.Arrow (second)
+import Data.Array ((!))
+import qualified Data.Array as A
+import Data.List (minimumBy)
+import Data.Function (on)
 
 data Op a = Replace a a | Delete | Insert | Match deriving (Eq, Show)
 
 type EditTranscript a = [Op a]
 
-edits :: Eq a => [a] -> [a] -> [(Op a, ([a], [a]))]
-edits [] []     = []
-edits [] (_:ys) = [(Insert, ([], ys))]
-edits (_:xs) [] = [(Delete, (xs, []))]
-edits (x:xs) (y:ys) = [(Insert, (x:xs, ys)), (Delete, (xs, y:ys)), (subst, (xs, ys))]
-  where
-    subst | x == y    = Match
-          | otherwise = Replace x y
-
 type CostFunction a = Op a -> Int
 
-greedyEditDistance :: Eq a => CostFunction a -> [a] -> [a] -> EditTranscript a
-greedyEditDistance _ [] [] = []
-greedyEditDistance cost xs ys = edit : uncurry (greedyEditDistance cost) args
-  where
-    (edit, args) : _ = sortOn (cost . fst) (edits xs ys)
-
--- TODO: compute bottom up, memoize
 editDistance :: Eq a => CostFunction a -> [a] -> [a] -> (Int, EditTranscript a)
-editDistance cost xs ys =
-  case sortOn fst (map f (edits xs ys)) of
-    []         -> (0, [])
-    (c, t) : _ -> (c, t)
+editDistance cost s t = second reverse (d m n)
   where
-    f (op, args) = let (d, t) = uncurry (editDistance cost) args in (cost op + d, op : t)
-
-editDist :: Eq a => [a] -> [a] -> Int
-editDist s t = d m n
-  where
-    d i 0 = i
-    d 0 j = j
+    d 0 0 = (0, [])
+    d i 0 = go (i - 1) 0 Delete
+    d 0 j = go 0 (j - 1) Insert
     d i j
-      | s !! (i - 1) == t !! (j - 1) = ds ! (i - 1, j - 1) -- MATCH
-      | otherwise = minimum [ ds ! (i - 1, j)     + 1 -- DELETE
-                            , ds ! (i,     j - 1) + 1 -- INSERT
-                            , ds ! (i - 1, j - 1) + 1 -- REPLACE
-                            ]
-    ds = listArray bounds [d i j | (i, j) <- range bounds]
+      | s !! (i - 1) == t !! (j - 1) = go (i - 1) (j - 1) Match
+      | otherwise = minimumBy (compare `on` fst)
+                      [ go (i - 1) j       Delete
+                      , go i       (j - 1) Insert
+                      , go (i - 1) (j - 1) (Replace (s !! (i - 1)) (t !! (j - 1)))
+                      ]
+
+    go i j op = let (score, script) = ds ! (i, j) in (score + cost op, op : script)
+
+    ds = A.listArray bounds [d i j | (i, j) <- A.range bounds]
     bounds = ((0, 0), (m, n))
     (m, n) = (length s, length t)
 
