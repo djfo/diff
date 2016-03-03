@@ -1,5 +1,13 @@
-module Edit where
+module Edit (
+    Op(..)
+  , EditTranscript
+  , showET
+  , CostFunction
+  , editDistance
+  , greedyEditDistance
+  ) where
 
+import Data.Array (listArray, (!), range)
 import Data.List (sortOn)
 
 data Op a = Replace a a | Delete | Insert | Match deriving (Eq, Show)
@@ -31,6 +39,21 @@ editDistance cost xs ys =
     (c, t) : _ -> (c, t)
   where
     f (op, args) = let (d, t) = uncurry (editDistance cost) args in (cost op + d, op : t)
+
+editDist :: Eq a => [a] -> [a] -> Int
+editDist s t = d m n
+  where
+    d i 0 = i
+    d 0 j = j
+    d i j
+      | s !! (i - 1) == t !! (j - 1) = ds ! (i - 1, j - 1) -- MATCH
+      | otherwise = minimum [ ds ! (i - 1, j)     + 1 -- DELETE
+                            , ds ! (i,     j - 1) + 1 -- INSERT
+                            , ds ! (i - 1, j - 1) + 1 -- REPLACE
+                            ]
+    ds = listArray bounds [d i j | (i, j) <- range bounds]
+    bounds = ((0, 0), (m, n))
+    (m, n) = (length s, length t)
 
 showET :: [Op a] -> String
 showET = map f
