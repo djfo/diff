@@ -6,7 +6,6 @@ import           Control.Monad    (void)
 import           Data.List        (sortOn)
 import           Data.Text        (Text)
 import qualified Data.Text        as T
-import qualified Data.Text.IO     as T
 import           Text.Parsec
 import           Text.Parsec.Text
 
