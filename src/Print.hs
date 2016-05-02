@@ -17,17 +17,17 @@ printEdit :: ToString a => EditTranscript a -> [a] -> [a] -> IO ()
 printEdit (op:ops) xs ys =
   case op of
     Insert -> do
-      putStrLn $ "+ | " ++ toS (head ys)
+      putStrLn $ "+" ++ toS (head ys)
       printEdit ops xs (tail ys)
     Delete -> do
-      putStrLn $ "- | " ++ toS (head xs)
+      putStrLn $ "-" ++ toS (head xs)
       printEdit ops (tail xs) ys
     Match -> do
-      putStrLn $ "= | " ++ toS (head xs)
+      putStrLn $ " " ++ toS (head xs)
       printEdit ops (tail xs) (tail ys)
     Replace x y -> do
-      putStrLn $ "R | " ++ toS x
-      putStrLn $ "  | " ++ toS y
+      putStrLn $ "-" ++ toS x
+      putStrLn $ "+" ++ toS y
       printEdit ops (tail xs) (tail ys)
 printEdit _ [] [] = return ()
 printEdit _ _ _ = error "invalid arguments"
