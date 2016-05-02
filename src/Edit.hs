@@ -1,7 +1,6 @@
 module Edit (
     Op(..)
   , EditTranscript
-  , showET
   , CostFunction
   , editDistance
   ) where
@@ -40,11 +39,3 @@ editDistance cost s t = second reverse (d m n)
     ds = A.listArray bounds [d i j | (i, j) <- A.range bounds]
     bounds = ((0, 0), (m, n))
     (m, n) = (length s, length t)
-
-showET :: [Op a] -> String
-showET = map f
-  where
-    f (Replace _ _) = 'R'
-    f Delete  = 'D'
-    f Insert  = 'I'
-    f Match   = 'M'
