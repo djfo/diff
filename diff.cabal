@@ -22,5 +22,6 @@ executable diff
   other-extensions:    TypeSynonymInstances, FlexibleInstances
   build-depends:       base >=4.8 && <4.9
                      , array >=0.5.1 && <0.6
+                     , text >= 1.2.1.3 && <1.3
   hs-source-dirs:      src
   default-language:    Haskell2010

@@ -1,28 +1,30 @@
 module Main where
 
-import System.Environment
+import           Edit
+import           List               (commonPrefixLen)
+import           Print
 
-import Edit
-import Print
-import List (commonPrefixLen)
+import           Data.Text          (Text)
+import qualified Data.Text          as T
+import qualified Data.Text.IO       as T
+import           Prelude            hiding (lines, readFile)
+import           System.Environment
 
 type F a = CostFunction a -> [a] -> [a] -> (Int, EditTranscript a)
 
-diff :: F String -> FilePath -> FilePath -> IO ()
+diff :: F Text -> FilePath -> FilePath -> IO ()
 diff editDist path1 path2 =
   do
-    lines1 <- lines <$> readFile path1
-    lines2 <- lines <$> readFile path2
+    lines1 <- T.lines <$> T.readFile path1
+    lines2 <- T.lines <$> T.readFile path2
     let (c, t) = editDist cost lines1 lines2
     putStrLn $ "cost: " ++ show c
-    printEdit t lines1 lines2
+    --printEdit t lines1 lines2
   where
-    cost :: Op String -> Int
-    cost Match = 0
-    cost (Replace x y)
-      | commonPrefixLen x y > 0 = 0
-      | otherwise               = 2
-    cost _ = 1
+    cost :: Op Text -> Int
+    cost Match         = 0
+    cost (Replace _ _) = 2
+    cost _             = 1
 
 strDiff :: F Char -> String -> String -> IO ()
 strDiff editDist s t =
@@ -34,7 +36,7 @@ strDiff editDist s t =
     cost :: Op a -> Int
     cost op =
       case op of
-        Replace _ _ -> 0
+        Replace _ _ -> 1
         Match       -> 0
         _           -> 1
 
