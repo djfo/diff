@@ -6,7 +6,7 @@ import           Control.Monad    (void)
 import           Data.List        (sortOn)
 import           Data.Text        (Text)
 import qualified Data.Text        as T
-import           Text.Parsec
+import           Text.Parsec      hiding (space)
 import           Text.Parsec.Text
 
 -- TODO: allow more escape sequences
@@ -71,8 +71,11 @@ identifier = do
   tl <- many $ oneOf $ ['a'..'z'] ++ ['A'..'Z'] ++ ['_'] ++ ['0'..'9']
   return (T.pack (hd : tl))
 
+space :: Parser Text
+space = fmap T.pack . many1 . oneOf $ " \t\n"
+
 cTok :: Parser Text
-cTok = try keyword <|> identifier <|> literal <|> punctuation <|> (fmap T.pack . many1 . oneOf $ " \t\n")
+cTok = try keyword <|> identifier <|> literal <|> punctuation <|> space
 
 cProg :: Parser [Text]
 cProg = many cTok
