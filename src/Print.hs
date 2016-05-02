@@ -41,7 +41,7 @@ printEdit' isLine (op:ops) xs ys =
       p $ toS (head xs)
       go ops (tail xs) (tail ys)
     Replace x y -> do
-      case (P.parse cProg "" x, P.parse cProg "" y) of
+      case (P.parse (cProg <* P.eof) "" x, P.parse (cProg <* P.eof) "" y) of
         (Right x', Right y') -> do
           let (_, t) = editDistance stdCost x' y'
           printEdit' True t x' y'

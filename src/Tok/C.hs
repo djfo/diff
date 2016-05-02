@@ -29,6 +29,19 @@ literalString = do
   spaces
   return . concat $ s
 
+literalChar :: Parser Text
+literalChar = do
+  void (char '\'')
+  c <- anyChar
+  void (char '\'')
+  return (T.pack [c])
+
+number :: Parser Text
+number = T.pack <$> many1 (oneOf ['0'..'9'])
+
+literal :: Parser Text
+literal = (T.pack <$> literalString) <|> number <|> literalChar
+
 punctuation :: Parser Text
 punctuation = (T.pack . (: [])) <$> oneOf "#[](){}:><-+.*/%;,=&|^"
 
@@ -50,7 +63,7 @@ keywords = [
   ]
 
 keyword :: Parser Text
-keyword = foldr1 (<|>) $ map (fmap T.pack . string) (sortOn length keywords)
+keyword = foldr1 (<|>) . map (fmap T.pack . string) . reverse . sortOn length $ keywords
 
 identifier :: Parser Text
 identifier = do
@@ -58,14 +71,8 @@ identifier = do
   tl <- many $ oneOf $ ['a'..'z'] ++ ['A'..'Z'] ++ ['_'] ++ ['0'..'9']
   return (T.pack (hd : tl))
 
-number :: Parser Text
-number = T.pack <$> many1 (oneOf ['0'..'9'])
-
-value :: Parser Text
-value = (T.pack <$> literalString) <|> number <|> ((T.pack . (: [])) <$> anyChar)
-
 cTok :: Parser Text
-cTok = try keyword <|> identifier <|> punctuation <|> value <|> (fmap T.pack . many1 . oneOf $ " \t\n")
+cTok = try keyword <|> identifier <|> literal <|> punctuation <|> (fmap T.pack . many1 . oneOf $ " \t\n")
 
 cProg :: Parser [Text]
 cProg = many cTok
