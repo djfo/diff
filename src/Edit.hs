@@ -3,13 +3,14 @@ module Edit (
   , EditTranscript
   , CostFunction
   , editDistance
+  , stdCost
   ) where
 
-import Control.Arrow (second)
-import Data.Array ((!))
-import qualified Data.Array as A
-import Data.List (minimumBy)
-import Data.Function (on)
+import           Control.Arrow (second)
+import           Data.Array    ((!))
+import qualified Data.Array    as A
+import           Data.Function (on)
+import           Data.List     (minimumBy)
 
 data Op a = Replace a a | Delete | Insert | Match deriving (Eq, Show)
 
@@ -39,3 +40,11 @@ editDistance cost s t = second reverse (d m n)
     ds = A.listArray bounds [d i j | (i, j) <- A.range bounds]
     bounds = ((0, 0), (m, n))
     (m, n) = (length s, length t)
+
+stdCost :: Op a -> Int
+stdCost op =
+  case op of
+    Match       -> 0
+    Replace _ _ -> 2
+    Insert      -> 1
+    Delete      -> 1
