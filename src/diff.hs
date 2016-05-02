@@ -26,39 +26,13 @@ diff editDist path1 path2 =
                            Nothing -> 2
     cost _             = 1
 
-test :: IO ()
-test = main2 (diff editDistance) ["examples/game.c", "examples/game1.c"]
-
-strDiff :: F Char -> String -> String -> IO ()
-strDiff editDist s t =
-  do
-    let (c, et) = editDist cost s t
-    putStrLn $ "cost: " ++ show c
-    printEdit et s t
-  where
-    cost :: Op a -> Int
-    cost op =
-      case op of
-        Replace _ _ -> 1
-        Match       -> 0
-        _           -> 1
-
 main2 :: (String -> String -> IO ()) -> [String] -> IO ()
 main2 f args =
   case args of
     [arg1, arg2] -> f arg1 arg2
     _            -> putStrLn "two arguments expected, too few given"
 
-select :: String -> [String] -> IO ()
-select cmd =
-  case cmd of
-    "diff" -> main2 (diff editDistance)
-    "str"  -> main2 (strDiff editDistance)
-    _      -> const (putStrLn $ "unknown command: " ++ cmd)
-
 main :: IO ()
 main = do
   args <- getArgs
-  case args of
-    cmd : cmdArgs -> select cmd cmdArgs
-    _             -> putStrLn "no command given"
+  main2 (diff editDistance) args
