@@ -1,9 +1,9 @@
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
-module Print where
+module Print (printEdit, zipET) where
 
-import           Edit
+import qualified Edit                as E
 import           Tok.C
 
 import           Control.Applicative ((<*))
@@ -29,22 +29,37 @@ red s = "\ESC[1;31m\ESC[1;4m" ++ s ++ "\ESC[0m"
 green :: String -> String
 green s = "\ESC[1;32m\ESC[1;4m" ++ s ++ "\ESC[0m"
 
-printEdit' :: Bool -> EditTranscript Text -> [Text] -> [Text] -> IO ()
+data DiffOp a
+  = Id a
+  | Insert a
+  | Delete a
+  | Replace a a
+  deriving (Eq, Ord, Show)
+
+zipET :: E.EditTranscript a -> [a] -> [a] -> [DiffOp a]
+zipET (E.Insert : xs)      ys     (z:zs) = Insert z    : zipET xs ys zs
+zipET (E.Delete : xs)      (y:ys) zs     = Delete y    : zipET xs ys zs
+zipET (E.Match : xs)       (y:ys) (_:zs) = Id y        : zipET xs ys zs
+zipET (E.Replace a b : xs) (_:ys) (_:zs) = Replace a b : zipET xs ys zs
+zipET _                     []     []    = []
+zipET _                     _      _     = error "invalid arguments"
+
+printEdit' :: Bool -> E.EditTranscript Text -> [Text] -> [Text] -> IO ()
 printEdit' isLine (op:ops) xs ys =
   case op of
-    Insert -> do
+    E.Insert -> do
       p $ green (toS (head ys))
       go ops xs (tail ys)
-    Delete -> do
+    E.Delete -> do
       p $ red (toS (head xs))
       go ops (tail xs) ys
-    Match -> do
+    E.Match -> do
       p $ toS (head xs)
       go ops (tail xs) (tail ys)
-    Replace x y -> do
+    E.Replace x y -> do
       case (P.parse (cProg <* P.eof) "" x, P.parse (cProg <* P.eof) "" y) of
         (Right x', Right y') -> do
-          let (_, t) = editDistance stdCost x' y'
+          let (_, t) = E.editDistance E.stdCost x' y'
           printEdit' True t x' y'
           putStrLn []
         _ -> do
@@ -58,5 +73,5 @@ printEdit' isLine (op:ops) xs ys =
 printEdit' _ _ [] [] = return ()
 printEdit' _ _ _ _ = error "invalid arguments"
 
-printEdit :: EditTranscript Text -> [Text] -> [Text] -> IO ()
+printEdit :: E.EditTranscript Text -> [Text] -> [Text] -> IO ()
 printEdit = printEdit' False
