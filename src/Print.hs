@@ -46,8 +46,9 @@ printEdit' isLine (op:ops) xs ys =
           let (_, t) = editDistance stdCost x' y'
           printEdit' True t x' y'
           putStrLn []
-        _ ->
-          error "parse error"
+        _ -> do
+          p $ red (toS x)
+          p $ green (toS y)
       printEdit ops (tail xs) (tail ys)
   where
     p = if isLine then putStr else putStrLn
