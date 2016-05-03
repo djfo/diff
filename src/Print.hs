@@ -1,12 +1,13 @@
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
-module Print (printEdit, zipET) where
+module Print (printEdit, zipET, chunks) where
 
 import qualified Edit                as E
 import           Tok.C
 
 import           Control.Applicative ((<*))
+import           Data.List           (tails)
 import           Data.Text           (Text)
 import qualified Data.Text           as T
 import qualified Text.Parsec         as P
@@ -36,6 +37,10 @@ data DiffOp a
   | Replace a a
   deriving (Eq, Ord, Show)
 
+idOp :: DiffOp a -> Bool
+idOp (Id _) = True
+idOp _      = False
+
 zipET :: E.EditTranscript a -> [a] -> [a] -> [DiffOp a]
 zipET (E.Insert : xs)      ys     (z:zs) = Insert z    : zipET xs ys zs
 zipET (E.Delete : xs)      (y:ys) zs     = Delete y    : zipET xs ys zs
@@ -44,34 +49,42 @@ zipET (E.Replace a b : xs) (_:ys) (_:zs) = Replace a b : zipET xs ys zs
 zipET _                     []     []    = []
 zipET _                     _      _     = error "invalid arguments"
 
-printEdit' :: Bool -> E.EditTranscript Text -> [Text] -> [Text] -> IO ()
-printEdit' isLine (op:ops) xs ys =
+chunks :: Int -> [DiffOp a] -> [DiffOp a] -> [[DiffOp a]]
+chunks n (x:xs) ys =
+  if idOp x then
+    chunks n xs (take n (x:ys))
+   else
+    let (tmp, xs') = break (all idOp . take n) (tails xs)
+        chunk      = reverse ys ++ [x] ++ take (length tmp + n) xs
+    in chunk : chunks n (concat . take 1 $ xs') []
+chunks _ [] _ = []
+
+printEdit' :: Bool -> [DiffOp Text] -> IO ()
+printEdit' isLine (op:ops) =
   case op of
-    E.Insert -> do
-      p $ green (toS (head ys))
-      go ops xs (tail ys)
-    E.Delete -> do
-      p $ red (toS (head xs))
-      go ops (tail xs) ys
-    E.Match -> do
-      p $ toS (head xs)
-      go ops (tail xs) (tail ys)
-    E.Replace x y -> do
+    Id x -> do
+      p $ toS x
+      go ops
+    Insert x -> do
+      p $ green (toS x)
+      go ops
+    Delete x -> do
+      p $ red (toS x)
+      go ops
+    Replace x y -> do
       case (P.parse (cProg <* P.eof) "" x, P.parse (cProg <* P.eof) "" y) of
         (Right x', Right y') -> do
           let (_, t) = E.editDistance E.stdCost x' y'
-          printEdit' True t x' y'
+          printEdit' True (zipET t x' y')
           putStrLn []
         _ -> do
           p $ red (toS x)
           p $ green (toS y)
-      printEdit ops (tail xs) (tail ys)
+      printEdit' False ops
   where
     p = if isLine then putStr else putStrLn
     go = printEdit' isLine
-
-printEdit' _ _ [] [] = return ()
-printEdit' _ _ _ _ = error "invalid arguments"
+printEdit' _ [] = return ()
 
 printEdit :: E.EditTranscript Text -> [Text] -> [Text] -> IO ()
-printEdit = printEdit' False
+printEdit t xs ys = mapM_ (\e -> putStrLn "---" >> printEdit' False e) (chunks 3 (zipET t xs ys) [])
