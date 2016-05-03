@@ -43,7 +43,7 @@ literal :: Parser Text
 literal = (T.pack <$> literalString) <|> number <|> literalChar
 
 punctuation :: Parser Text
-punctuation = (T.pack . (: [])) <$> oneOf "#[](){}:><-+.*/%;,=&|^"
+punctuation = (T.pack . (: [])) <$> oneOf "#[](){}:><-+.*/%;,=&|^!?"
 
 keywords :: [String]
 keywords = [
