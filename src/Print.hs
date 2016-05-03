@@ -6,9 +6,10 @@ module Print where
 import           Edit
 import           Tok.C
 
-import           Data.Text   (Text)
-import qualified Data.Text   as T
-import qualified Text.Parsec as P
+import           Control.Applicative ((<*))
+import           Data.Text           (Text)
+import qualified Data.Text           as T
+import qualified Text.Parsec         as P
 
 class ToString a where
   toS :: a -> String

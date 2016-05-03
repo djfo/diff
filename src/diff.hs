@@ -3,9 +3,10 @@ module Main where
 import           Edit
 import           Print
 
-import           Data.Text          (Text)
-import qualified Data.Text          as T
-import qualified Data.Text.IO       as T
+import           Control.Applicative ((<$>))
+import           Data.Text           (Text)
+import qualified Data.Text           as T
+import qualified Data.Text.IO        as T
 import           System.Environment
 
 type F a = CostFunction a -> [a] -> [a] -> (Int, EditTranscript a)

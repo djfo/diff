@@ -2,12 +2,17 @@
 
 module Tok.C where
 
-import           Control.Monad    (void)
-import           Data.List        (sortOn)
-import           Data.Text        (Text)
-import qualified Data.Text        as T
-import           Text.Parsec      hiding (space)
+import           Control.Applicative ((<$>))
+import           Control.Monad       (void)
+import           Data.List           (sortBy)
+import           Data.Ord            (comparing)
+import           Data.Text           (Text)
+import qualified Data.Text           as T
+import           Text.Parsec         hiding (space)
 import           Text.Parsec.Text
+
+sortOn :: Ord b => (a -> b) -> [a] -> [a]
+sortOn = sortBy . comparing
 
 -- TODO: allow more escape sequences
 escape :: Parser String
