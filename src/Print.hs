@@ -46,8 +46,8 @@ zipET (E.Insert : xs)      ys     (z:zs) = Insert z    : zipET xs ys zs
 zipET (E.Delete : xs)      (y:ys) zs     = Delete y    : zipET xs ys zs
 zipET (E.Match : xs)       (y:ys) (_:zs) = Id y        : zipET xs ys zs
 zipET (E.Replace a b : xs) (_:ys) (_:zs) = Replace a b : zipET xs ys zs
-zipET _                     []     []    = []
-zipET _                     _      _     = error "invalid arguments"
+zipET _                    []     []     = []
+zipET _                    _      _      = error "invalid arguments"
 
 chunks :: Int -> [DiffOp a] -> [DiffOp a] -> [[DiffOp a]]
 chunks n (x:xs) ys =
@@ -63,26 +63,27 @@ printEdit' :: Bool -> [DiffOp Text] -> IO ()
 printEdit' isLine (op:ops) =
   case op of
     Id x -> do
-      p $ toS x
+      p "  " (toS x)
       go ops
     Insert x -> do
-      p $ green (toS x)
+      p "+ " $ green (toS x)
       go ops
     Delete x -> do
-      p $ red (toS x)
+      p "- " $ red (toS x)
       go ops
     Replace x y -> do
       case (P.parse (cProg <* P.eof) "" x, P.parse (cProg <* P.eof) "" y) of
         (Right x', Right y') -> do
           let (_, t) = E.editDistance E.stdCost x' y'
+          putStr "~ "
           printEdit' True (zipET t x' y')
           putStrLn []
         _ -> do
-          p $ red (toS x)
-          p $ green (toS y)
+          p "- " $ red (toS x)
+          p "+ " $ green (toS y)
       printEdit' False ops
   where
-    p = if isLine then putStr else putStrLn
+    p x y = if isLine then putStr y else putStrLn (x ++ y)
     go = printEdit' isLine
 printEdit' _ [] = return ()
 
