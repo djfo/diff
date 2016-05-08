@@ -4,6 +4,7 @@
 module Print (printEdit, zipET, chunks) where
 
 import qualified Edit                as E
+import           Term
 import           Tok.C
 
 import           Control.Applicative ((<*))
@@ -23,12 +24,6 @@ instance ToString String where
 
 instance ToString Text where
   toS = T.unpack
-
-red :: String -> String
-red s = "\ESC[1;31m\ESC[1;4m" ++ s ++ "\ESC[0m"
-
-green :: String -> String
-green s = "\ESC[1;32m\ESC[1;4m" ++ s ++ "\ESC[0m"
 
 data DiffOp a
   = Id a
@@ -66,10 +61,10 @@ printEdit' isLine (op:ops) =
       p "  " (toS x)
       go ops
     Insert x -> do
-      p "+ " $ green (toS x)
+      p "+ " $ term green (toS x)
       go ops
     Delete x -> do
-      p "- " $ red (toS x)
+      p "- " $ term red (toS x)
       go ops
     Replace x y -> do
       case (P.parse (cProg <* P.eof) "" x, P.parse (cProg <* P.eof) "" y) of
@@ -79,8 +74,8 @@ printEdit' isLine (op:ops) =
           printEdit' True (zipET t x' y')
           putStrLn []
         _ -> do
-          p "- " $ red (toS x)
-          p "+ " $ green (toS y)
+          p "- " $ term red (toS x)
+          p "+ " $ term green (toS y)
       printEdit' False ops
   where
     p x y = if isLine then putStr y else putStrLn (x ++ y)
