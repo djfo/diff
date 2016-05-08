@@ -16,8 +16,7 @@ diff editDist path1 path2 =
   do
     lines1 <- T.lines <$> T.readFile path1
     lines2 <- T.lines <$> T.readFile path2
-    let (c, t) = editDist cost lines1 lines2
-    putStrLn $ "cost: " ++ show c
+    let (_, t) = editDist cost lines1 lines2
     printEdit t lines1 lines2
   where
     cost :: Op Text -> Int
