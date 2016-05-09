@@ -2,6 +2,8 @@ module Term (
     Term()
   , Color(..)
   , term
+  , fg
+  , bg
   , black
   , red
   , green
@@ -10,10 +12,12 @@ module Term (
   , magenta
   , cyan
   , white
+  , bold
   , underline
   , blink
   ) where
 
+import           Data.List  (intercalate)
 import           Data.Maybe
 
 data Color
@@ -31,6 +35,7 @@ data Term
   = Term {
     tForeground :: Maybe Color
   , tBackground :: Maybe Color
+  , tBold :: Bool
   , tUnderline :: Bool
   , tBlink :: Bool
   }
@@ -41,25 +46,32 @@ just x Nothing  = x
 just _ (Just x) = Just x
 
 instance Monoid Term where
-  mempty = Term Nothing Nothing False False
+  mempty = Term Nothing Nothing False False False
   mappend t s = s { tForeground = just (tForeground t) (tForeground s)
                   , tBackground = just (tBackground t) (tBackground s)
+                  , tBold = tBold t || tBold s
                   , tUnderline = tUnderline t || tUnderline s
                   , tBlink = tBlink t || tBlink s
                   }
 
-color :: Color -> Term
-color c = mempty { tForeground = Just c }
+fg :: Color -> Term
+fg c = mempty { tForeground = Just c }
+
+bg :: Color -> Term
+bg c = mempty { tBackground = Just c }
 
 black, red, green, yellow, blue, magenta, cyan, white :: Term
-black = color Black
-red = color Red
-green = color Green
-yellow = color Yellow
-blue = color Blue
-magenta = color Magenta
-cyan = color Cyan
-white = color White
+black = fg Black
+red = fg Red
+green = fg Green
+yellow = fg Yellow
+blue = fg Blue
+magenta = fg Magenta
+cyan = fg Cyan
+white = fg White
+
+bold :: Term
+bold = mempty { tBold = True }
 
 underline :: Term
 underline = mempty { tUnderline = True }
@@ -70,10 +82,21 @@ blink = mempty { tBlink = True }
 term :: Term -> String -> String
 term t s = escape ++ s ++ unescape
   where
-    escape = concat (catMaybes [fg, u, bl])
+    escape = "\ESC[" ++ (if null attributes_ then "0" else intercalate ";" attributes_) ++ "m"
     unescape = "\ESC[0m"
-    fg = case tForeground t of
-           Just c -> Just $ "\ESC[1;" ++ show (30 + fromEnum c) ++ "m"
-           Nothing -> Nothing
-    u = if tUnderline t then Just "\ESC[1;4m" else Nothing
-    bl = if tBlink t then Just "\ESC[1;5m" else Nothing
+
+    bool :: (Term -> Bool) -> Int -> Maybe String
+    bool p c = if p t then Just (show c) else Nothing
+
+    color :: (Term -> Maybe Color) -> Int -> Maybe String
+    color f b =
+      case f t of
+        Just c -> Just $ show (b + fromEnum c)
+        Nothing -> Nothing
+
+    attributes_ = catMaybes [ color tForeground 30
+                            , color tBackground 40
+                            , bool tBold 1
+                            , bool tUnderline 4
+                            , bool tBlink 5
+                            ]
