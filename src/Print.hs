@@ -73,10 +73,9 @@ printEdit' isLine (op:ops) =
           putStr "~ "
           printEdit' True (zipET t x' y')
           putStrLn []
-        _ -> do
-          p "- " $ term red (toS x)
-          p "+ " $ term green (toS y)
-      printEdit' False ops
+          printEdit' False ops
+        _ ->
+          printEdit' False (Delete x : Insert y : ops)
   where
     p x y = if isLine then putStr y else putStrLn (x ++ y)
     go = printEdit' isLine
