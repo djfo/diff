@@ -31,8 +31,7 @@ literalString = do
   void $ char '"'
   s <- many (escape <|> fmap (:[]) (noneOf "\""))
   void $ char '"'
-  spaces
-  return . concat $ s
+  return $ "\"" ++ concat s ++ "\""
 
 literalChar :: Parser Text
 literalChar = do
