@@ -80,11 +80,11 @@ blink :: Term
 blink = mempty { tBlink = True }
 
 term :: Term -> String -> String
-term t s = escape ++ s ++ unescape
+term t s =
+  if null attributes_
+    then s
+    else "\ESC[" ++ (intercalate ";" attributes_) ++ "m" ++ s ++ unescape
   where
-    escape = "\ESC[" ++ (if null attributes_ then "0" else intercalate ";" attributes_) ++ "m"
-    unescape = "\ESC[0m"
-
     bool :: (Term -> Bool) -> Int -> Maybe String
     bool p c = if p t then Just (show c) else Nothing
 
@@ -100,3 +100,6 @@ term t s = escape ++ s ++ unescape
                             , bool tUnderline 4
                             , bool tBlink 5
                             ]
+
+unescape :: String
+unescape = "\ESC[0m"
