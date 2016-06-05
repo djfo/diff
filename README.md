@@ -9,8 +9,9 @@
 - [A Guided Tour to Approximate String Matching](http://users.csc.calpoly.edu/~dekhtyar/570-Fall2011/papers/navarro-approximate.pdf) (Navarro)
 - [Lazy Dynamic Programming](http://jelv.is/blog/Lazy-Dynamic-Programming/)
 - [ANSI escape codes](http://bluesock.org/~willg/dev/ansi.html)
+- [ANSI escape code](https://en.wikipedia.org/wiki/ANSI_escape_code) (Wikipedia)
 
 ## Tools
 
 - [SmartDifferencer](http://www.semanticdesigns.com/Products/SmartDifferencer/)
-- [tokdiff](https://github.com/WorldMaker/tokdiff)
+- [tokdiff: Tokenizer-based character diff tool](https://github.com/WorldMaker/tokdiff)
